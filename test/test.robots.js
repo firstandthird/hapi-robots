@@ -19,9 +19,6 @@ lab.experiment('hapi-redirect', () => {
   });
 
   lab.test('will disallow all if not in production mode', (done) => {
-    console.log('--------------------')
-    console.log('--------------------')
-    console.log('--------------------')
     server.register({
       register: robotModule,
       options: {
@@ -33,10 +30,59 @@ lab.experiment('hapi-redirect', () => {
         method: 'get',
         url: '/robots.txt'
       }, (response) => {
-        console.log(response)
         Code.expect(response.statusCode).to.equal(200);
-        console.log(Object.keys(response))
-        Code.expect(response.headers.location).to.equal('/it/works');
+        Code.expect(response.payload).to.include('User-agent: *');
+        Code.expect(response.payload).to.include('Disallow: /');
+        done();
+      });
+    });
+  });
+  lab.test('will allow options if in production mode', (done) => {
+    process.env.NODE_ENV = 'production';
+    server.register({
+      register: robotModule,
+      options: {
+        userAgents: {
+          R2D2: ['/droid/discrimination/policies'],
+          Hel: ['/class/revolt/'],
+          Pris: ['/five/years/', '/harrison/ford']
+        }
+      }
+    },
+    () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt'
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.payload).to.include('User-agent: Hel');
+        Code.expect(response.payload).to.include('Disallow: /five/years');
+        done();
+      });
+    });
+  });
+  lab.test('will allow all for a specific robot, if specified', (done) => {
+    process.env.NODE_ENV = 'production';
+    server.register({
+      register: robotModule,
+      options: {
+        userAgents: {
+          // nobody has access:
+          '*': ['/'],
+          // except for Fred, Fred has access to everything:
+          Fred: []
+        }
+      }
+    },
+    () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt'
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.payload).to.include('User-agent: *\nDisallow: /\n');
+        Code.expect(response.payload).to.include('User-agent: Fred\nDisallow:');
+        done();
       });
     });
   });
