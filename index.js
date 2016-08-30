@@ -7,34 +7,34 @@ const disallowAll = {
 };
 
 const defaults = {
-  // can be over-ridden by plugin users:
-  userAgents: disallowAll,
-  // will print out debug info:
-  debug: true
+  debug: true,
+  envs: {
+    production: disallowAll
+  },
+  env: 'production'
 };
 
 exports.register = (server, options, next) => {
   const pluginOptions = _.defaults(options, defaults);
-  // if not in production mode, nobody is allowed:
-  if (process.env.NODE_ENV !== 'production') {
-    pluginOptions.userAgents = disallowAll;
-  }
   // render the robot.txt:
-  let robotText = _.reduce(pluginOptions.userAgents, (memo, disallowList, userAgent) => {
-    memo += `\nUser-agent: ${userAgent}`;
+  let first = true;
+  let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
+    memo += `${first ? '' : '\r\n'}User-agent: ${userAgent}`;
+    first = false;
     if (typeof disallowList === 'string') {
-      memo += `\nDisallow: ${disallowList}`;
+      memo += `\r\nDisallow: ${disallowList}`;
       return memo;
     }
     if (disallowList.length === 0) {
-        memo += `\nDisallow:`;
+        memo += `\r\nDisallow:`;
         return memo;
     }
     _.each(disallowList, (disallowPath) => {
-      memo += `\nDisallow: ${disallowPath}`;
+      memo += `\r\nDisallow: ${disallowPath}`;
     });
     return memo;
   }, '');
+  robotText += '\r\n';
   if (pluginOptions.debug) {
     server.log(['hapi-robots', 'debug'], robotText);
   }

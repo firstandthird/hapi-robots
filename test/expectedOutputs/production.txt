@@ -1,0 +1,7 @@
+User-agent: R2D2
+Disallow: /droid/discrimination/policies
+User-agent: Hel
+Disallow: /class/revolt/
+User-agent: Pris
+Disallow: /five/years/
+Disallow: /harrison/ford

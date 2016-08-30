@@ -4,6 +4,7 @@ const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 const Hapi = require('hapi');
 const robotModule = require('../index.js');
+const fs = require('fs');
 
 lab.experiment('hapi-redirect', () => {
   let server;
@@ -18,12 +19,10 @@ lab.experiment('hapi-redirect', () => {
     server.stop(done);
   });
 
-  lab.test('will disallow all if not in production mode', (done) => {
+  lab.test('disallows everything by default', (done) => {
     server.register({
       register: robotModule,
-      options: {
-        disallowList: ['R2D2', 'Hel']
-      }
+      options: {}
     },
     () => {
       server.inject({
@@ -31,22 +30,27 @@ lab.experiment('hapi-redirect', () => {
         url: '/robots.txt'
       }, (response) => {
         Code.expect(response.statusCode).to.equal(200);
-        Code.expect(response.payload).to.include('User-agent: *');
-        Code.expect(response.payload).to.include('Disallow: /');
+        const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
+        Code.expect(response.payload).to.equal(str);
         done();
       });
     });
   });
-  lab.test('will allow options if in production mode', (done) => {
-    process.env.NODE_ENV = 'production';
+  lab.test('allows options for different environments', (done) => {
     server.register({
       register: robotModule,
       options: {
-        userAgents: {
-          R2D2: ['/droid/discrimination/policies'],
-          Hel: ['/class/revolt/'],
-          Pris: ['/five/years/', '/harrison/ford']
-        }
+        debug: true,
+        envs: {
+          production: {
+            R2D2: ['/droid/discrimination/policies'],
+            Hel: ['/class/revolt/'],
+            Pris: ['/five/years/', '/harrison/ford']
+          },
+          staging: {
+          }
+        },
+        env: 'production'
       }
     },
     () => {
@@ -55,23 +59,28 @@ lab.experiment('hapi-redirect', () => {
         url: '/robots.txt'
       }, (response) => {
         Code.expect(response.statusCode).to.equal(200);
-        Code.expect(response.payload).to.include('User-agent: Hel');
-        Code.expect(response.payload).to.include('Disallow: /five/years');
+        const str = fs.readFileSync('./test/expectedOutputs/production.txt').toString();
+        Code.expect(response.payload).to.equal(str);
         done();
       });
     });
   });
   lab.test('will allow all for a specific robot, if specified', (done) => {
-    process.env.NODE_ENV = 'production';
     server.register({
       register: robotModule,
       options: {
-        userAgents: {
-          // nobody has access:
-          '*': ['/'],
-          // except for Fred, Fred has access to everything:
-          Fred: []
-        }
+        debug: true,
+        envs: {
+          production: {
+          },
+          staging: {
+            // nobody has access:
+            '*': ['/'],
+            // except for Fred, Fred has access to everything:
+            Fred: []
+          }
+        },
+        env: 'staging'
       }
     },
     () => {
@@ -80,8 +89,8 @@ lab.experiment('hapi-redirect', () => {
         url: '/robots.txt'
       }, (response) => {
         Code.expect(response.statusCode).to.equal(200);
-        Code.expect(response.payload).to.include('User-agent: *\nDisallow: /\n');
-        Code.expect(response.payload).to.include('User-agent: Fred\nDisallow:');
+        const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
+        Code.expect(response.payload).to.equal(str);
         done();
       });
     });
