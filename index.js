@@ -1,6 +1,6 @@
 'use strict';
 const _ = require('lodash');
-
+const os = require('os');
 // object representing a robots.txt that blocks everything:
 const disallowAll = {
   '*': ['/']
@@ -19,22 +19,22 @@ exports.register = (server, options, next) => {
   // render the robot.txt:
   let first = true;
   let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
-    memo += `${first ? '' : '\r\n'}User-agent: ${userAgent}`;
+    memo += `${first ? '' : os.EOL}User-agent: ${userAgent}`;
     first = false;
     if (typeof disallowList === 'string') {
-      memo += `\r\nDisallow: ${disallowList}`;
+      memo += `${os.EOL}Disallow: ${disallowList}`;
       return memo;
     }
     if (disallowList.length === 0) {
-        memo += `\r\nDisallow:`;
+        memo += `${os.EOL}Disallow:`;
         return memo;
     }
     _.each(disallowList, (disallowPath) => {
-      memo += `\r\nDisallow: ${disallowPath}`;
+      memo += `${os.EOL}Disallow: ${disallowPath}`;
     });
     return memo;
   }, '');
-  robotText += '\r\n';
+  robotText += os.EOL;
   if (pluginOptions.debug) {
     server.log(['hapi-robots', 'debug'], robotText);
   }
