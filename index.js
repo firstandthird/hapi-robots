@@ -5,19 +5,28 @@ const os = require('os');
 const disallowAll = {
   '*': ['/']
 };
+// object representing a robots.txt that allows everything:
+const allowAll = {
+  '*': []
+};
 
 const defaults = {
   debug: true,
   envs: {
-    production: disallowAll
+    production: allowAll,
+    '*': disallowAll
   },
-  env: 'production'
+  env: process.env.NODE_ENV
 };
 
 exports.register = (server, options, next) => {
   const pluginOptions = _.defaults(options, defaults);
   // render the robot.txt:
   let first = true;
+  // if env not found, use wildcard env:
+  if (!pluginOptions.envs[pluginOptions.env]) {
+    pluginOptions.env = '*';
+  }
   let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
     memo += `${first ? '' : os.EOL}User-agent: ${userAgent}`;
     first = false;

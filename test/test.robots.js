@@ -19,10 +19,12 @@ lab.experiment('hapi-redirect', () => {
     server.stop(done);
   });
 
-  lab.test('disallows everything by default', (done) => {
+  lab.test('disallows everything if env is not recognized', (done) => {
     server.register({
       register: robotModule,
-      options: {}
+      options: {
+        env: 'totally random'
+      }
     },
     () => {
       server.inject({
@@ -36,21 +38,38 @@ lab.experiment('hapi-redirect', () => {
       });
     });
   });
+  lab.test('allows everything if env is production mode', (done) => {
+    server.register({
+      register: robotModule,
+      options: {
+        env: 'production'
+      }
+    },
+    () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt'
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        const str = fs.readFileSync('./test/expectedOutputs/allowAll.txt').toString();
+        Code.expect(response.payload).to.equal(str);
+        done();
+      });
+    });
+  });
   lab.test('allows options for different environments', (done) => {
     server.register({
       register: robotModule,
       options: {
         debug: true,
         envs: {
-          production: {
+          staging: {
             R2D2: ['/droid/discrimination/policies'],
             Hel: ['/class/revolt/'],
             Pris: ['/five/years/', '/harrison/ford']
-          },
-          staging: {
           }
         },
-        env: 'production'
+        env: 'staging'
       }
     },
     () => {
