@@ -28,6 +28,10 @@ exports.register = (server, options, next) => {
     pluginOptions.env = '*';
   }
   let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
+    if (options.env === 'production') {
+      memo = '';
+      return memo;
+    }
     memo += `${first ? '' : os.EOL}User-agent: ${userAgent}`;
     first = false;
     if (typeof disallowList === 'string') {
@@ -52,9 +56,9 @@ exports.register = (server, options, next) => {
     method: 'GET',
     handler: (request, reply) => {
       if (pluginOptions.debug) {
-        server.log(['hapi-robots', 'debug'], `robots.txt queried by ${request.userAgent}`);
+        server.log(['hapi-robots', 'debug'], `robots.txt queried by ${request.headers['user-agent']}`);
       }
-      reply(robotText);
+      reply(robotText).type('text/plain');
     }
   });
   next();
