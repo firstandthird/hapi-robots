@@ -34,6 +34,7 @@ lab.experiment('hapi-redirect', () => {
         Code.expect(response.statusCode).to.equal(200);
         const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
         Code.expect(response.payload).to.equal(str);
+        Code.expect(response.headers['content-type']).to.include('text/plain');
         done();
       });
     });
