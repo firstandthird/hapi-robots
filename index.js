@@ -28,7 +28,7 @@ exports.register = (server, options, next) => {
     pluginOptions.env = '*';
   }
   // by default, production should return blank:
-  let robotText = options.env === 'production' ? '' : _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
+  let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
     memo += `${first ? '' : os.EOL}User-agent: ${userAgent}`;
     first = false;
     if (typeof disallowList === 'string') {
