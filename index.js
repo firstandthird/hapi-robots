@@ -11,12 +11,12 @@ const allowAll = {
 };
 
 const defaults = {
-  debug: true,
+  verbose: true,
   envs: {
     production: allowAll,
     '*': disallowAll
   },
-  env: process.env.NODE_ENV
+  env: process.env.NODE_ENV ? process.env.NODE_ENV : '*'
 };
 
 exports.register = (server, options, next) => {
@@ -35,8 +35,8 @@ exports.register = (server, options, next) => {
       return memo;
     }
     if (disallowList.length === 0) {
-        memo += `${os.EOL}Disallow:`;
-        return memo;
+      memo += `${os.EOL}Disallow:`;
+      return memo;
     }
     _.each(disallowList, (disallowPath) => {
       memo += `${os.EOL}Disallow: ${disallowPath}`;
@@ -44,15 +44,15 @@ exports.register = (server, options, next) => {
     return memo;
   }, '');
   robotText += os.EOL;
-  if (pluginOptions.debug) {
-    server.log(['hapi-robots', 'debug'], robotText);
+  if (pluginOptions.verbose) {
+    server.log(['hapi-robots', 'info'], robotText);
   }
   server.route({
     path: '/robots.txt',
     method: 'GET',
     handler: (request, reply) => {
-      if (pluginOptions.debug) {
-        server.log(['hapi-robots', 'debug'], `robots.txt queried by ${request.headers['user-agent']}`);
+      if (pluginOptions.verbose) {
+        server.log(['hapi-robots', 'info'], `robots.txt queried by ${request.headers['user-agent']}`);
       }
       reply(robotText).type('text/plain');
     }

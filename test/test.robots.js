@@ -62,7 +62,7 @@ lab.experiment('hapi-redirect', () => {
     server.register({
       register: robotModule,
       options: {
-        debug: true,
+        verbose: true,
         envs: {
           staging: {
             R2D2: ['/droid/discrimination/policies'],
@@ -89,7 +89,7 @@ lab.experiment('hapi-redirect', () => {
     server.register({
       register: robotModule,
       options: {
-        debug: true,
+        verbose: true,
         envs: {
           production: {
           },
