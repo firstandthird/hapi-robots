@@ -1,6 +1,6 @@
 {
   "name": "hapi-robots",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Hapi plugin to serve up robots.txt",
   "main": "index.js",
   "scripts": {
