@@ -1,4 +1,10 @@
 
+1.1.0 / 2016-11-02
+==================
+
+  * added another test for defaulting to disallow all
+  * fix for merging defaults correctly
+
 1.0.3 / 2016-11-02
 ==================
 
