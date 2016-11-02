@@ -50,6 +50,9 @@ exports.register = (server, options, next) => {
   server.route({
     path: '/robots.txt',
     method: 'GET',
+    config: {
+      auth: false
+    },
     handler: (request, reply) => {
       if (pluginOptions.verbose) {
         server.log(['hapi-robots', 'info'], `robots.txt queried by ${request.headers['user-agent']}`);
