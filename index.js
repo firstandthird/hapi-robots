@@ -20,7 +20,7 @@ const defaults = {
 };
 
 exports.register = (server, options, next) => {
-  const pluginOptions = _.defaults(options, defaults);
+  const pluginOptions = _.defaultsDeep(options, defaults);
   // render the robot.txt:
   let first = true;
   // if env not found, use wildcard env:
