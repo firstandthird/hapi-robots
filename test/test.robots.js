@@ -115,4 +115,51 @@ lab.experiment('hapi-redirect', () => {
       });
     });
   });
+
+  lab.test('options support multiple hosts as well', (done) => {
+    server.register({
+      register: robotModule,
+      options: {
+        verbose: true,
+        host: 'martha',
+        env: 'staging',
+        hosts: {
+          martha: {
+            envs: {
+              staging: {
+                // nobody has access:
+                '*': ['/'],
+                // except for Fred, Fred has access to everything:
+                Fred: []
+              }
+            }
+          },
+          letterman: {
+            env: 'production',
+            envs: {
+              production: {
+              },
+              staging: {
+                // nobody has access:
+                '*': ['/'],
+                // except for Fred, Fred has access to everything:
+                Fred: []
+              }
+            }
+          }
+        }
+      }
+    },
+    () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt'
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
+        Code.expect(response.payload).to.equal(str);
+        done();
+      });
+    });
+  });
 });

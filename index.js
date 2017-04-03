@@ -21,6 +21,10 @@ const defaults = {
 
 exports.register = (server, options, next) => {
   const pluginOptions = _.defaults(options, defaults);
+  // if a host was selected, use the envs set for that host:
+  if (pluginOptions.host !== undefined) {
+    pluginOptions.envs = pluginOptions.hosts[pluginOptions.host].envs;
+  }
   // render the robot.txt:
   let first = true;
   // if env not found, use wildcard env:
