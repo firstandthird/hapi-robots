@@ -123,7 +123,7 @@ lab.experiment('hapi-redirect', () => {
         verbose: true,
         env: 'staging',
         hosts: {
-          thing1: {
+          martha: {
             envs: {
               staging: {
                 // nobody has access:
