@@ -121,10 +121,9 @@ lab.experiment('hapi-redirect', () => {
       register: robotModule,
       options: {
         verbose: true,
-        host: 'martha',
         env: 'staging',
         hosts: {
-          martha: {
+          thing1: {
             envs: {
               staging: {
                 // nobody has access:
@@ -158,6 +157,32 @@ lab.experiment('hapi-redirect', () => {
         Code.expect(response.statusCode).to.equal(200);
         const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
         Code.expect(response.payload).to.equal(str);
+        done();
+      });
+    });
+  });
+
+  lab.test('will default to disallow all', (done) => {
+    server.register({
+      register: robotModule,
+      options: {
+        verbose: true,
+        envs: {
+          production: {
+            '*': '/'
+          }
+        }
+      }
+    },
+    () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt'
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
+        Code.expect(response.payload).to.equal(str);
+        Code.expect(response.headers['content-type']).to.include('text/plain');
         done();
       });
     });

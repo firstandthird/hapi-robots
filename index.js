@@ -21,9 +21,9 @@ const defaults = {
 
 exports.register = (server, options, next) => {
   const pluginOptions = _.defaults(options, defaults);
-  // if a host was selected, use the envs set for that host:
-  if (pluginOptions.host !== undefined) {
-    pluginOptions.envs = pluginOptions.hosts[pluginOptions.host].envs;
+  // if a set of hosts was configured, use the hapi host name to get the env for that host:
+  if (pluginOptions.hosts !== undefined) {
+    pluginOptions.envs = pluginOptions.hosts[server.info.host].envs;
   }
   // render the robot.txt:
   let first = true;
@@ -54,6 +54,9 @@ exports.register = (server, options, next) => {
   server.route({
     path: '/robots.txt',
     method: 'GET',
+    config: {
+      auth: false
+    },
     handler: (request, reply) => {
       if (pluginOptions.verbose) {
         server.log(['hapi-robots', 'info'], `robots.txt queried by ${request.headers['user-agent']}`);
