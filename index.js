@@ -23,6 +23,9 @@ exports.register = (server, options, next) => {
   const pluginOptions = _.defaultsDeep(options, defaults);
   // if a set of hosts was configured, use the hapi host name to get the env for that host:
   if (pluginOptions.hosts !== undefined) {
+    if (pluginOptions.verbose) {
+      server.log(['hapi-robots'], `setting env ${pluginOptions.env} for host ${server.info.host}`);
+    }
     pluginOptions.envs = pluginOptions.hosts[server.info.host].envs;
   }
   // render the robot.txt:
