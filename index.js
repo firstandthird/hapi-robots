@@ -20,7 +20,7 @@ const defaults = {
 };
 
 exports.register = (server, options, next) => {
-  const pluginOptions = _.defaults(options, defaults);
+  const pluginOptions = _.defaultsDeep(options, defaults);
   // if a set of hosts was configured, use the hapi host name to get the env for that host:
   if (pluginOptions.hosts !== undefined) {
     pluginOptions.envs = pluginOptions.hosts[server.info.host].envs;
