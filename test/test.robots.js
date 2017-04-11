@@ -128,21 +128,19 @@ lab.experiment('hapi-redirect', () => {
             },
             staging: {
               // nobody has access:
+              '*': ['/']
+            }
+          }
+        },
+        martha: {
+          envs: {
+            staging: {
+              // nobody has access:
               '*': ['/'],
               // except for Fred, Fred has access to everything:
               Fred: []
             }
           }
-        }
-      }
-    };
-    options.hosts[server.info.host] = {
-      envs: {
-        staging: {
-          // nobody has access:
-          '*': ['/'],
-          // except for Fred, Fred has access to everything:
-          Fred: []
         }
       }
     };
@@ -152,7 +150,10 @@ lab.experiment('hapi-redirect', () => {
     }, () => {
       server.inject({
         method: 'get',
-        url: '/robots.txt'
+        url: '/robots.txt',
+        headers: {
+          host: 'martha'
+        }
       }, (response) => {
         Code.expect(response.statusCode).to.equal(200);
         const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
