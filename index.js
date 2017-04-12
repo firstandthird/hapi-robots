@@ -29,9 +29,6 @@ exports.register = (server, options, next) => {
       auth: false
     },
     handler: (request, reply) => {
-      if (pluginOptions.verbose) {
-        server.log(['hapi-robots', 'info'], `robots.txt queried by ${request.headers['user-agent']} by host ${request.info.host}`);
-      }
       if (pluginOptions.hosts !== undefined) {
         pluginOptions.envs = pluginOptions.hosts[request.info.host].envs;
       }
@@ -59,7 +56,11 @@ exports.register = (server, options, next) => {
       }, '');
       robotText += os.EOL;
       if (pluginOptions.verbose) {
-        server.log(['hapi-robots', 'info'], robotText);
+        server.log(['hapi-robots', 'info'], {
+          message: 'robots.txt queried',
+          userAgent: request.headers['user-agent'],
+          host: request.info.host,
+          robots: robotText });
       }
       reply(robotText).type('text/plain');
     }
