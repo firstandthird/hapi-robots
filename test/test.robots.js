@@ -153,6 +153,43 @@ lab.experiment('hapi-robots', () => {
     });
   });
 
+  lab.test('fallback if host not specified to default env', (done) => {
+    const options = {
+      verbose: true,
+      env: 'staging',
+      hosts: {
+        letterman: {
+          // nobody has access:
+          '*': ['/']
+        },
+        martha: {
+          // nobody has access:
+          '*': ['/'],
+          // except for Fred, Fred has access to everything:
+          Fred: []
+        }
+      }
+    };
+    server.register({
+      register: robotModule,
+      options
+    }, () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt',
+        headers: {
+          host: 'leno'
+        }
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
+        Code.expect(response.payload).to.equal(str);
+        Code.expect(response.headers['content-type']).to.include('text/plain');
+        done();
+      });
+    });
+  });
+
   lab.test('will default to disallow all', (done) => {
     server.register({
       register: robotModule,
