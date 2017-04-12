@@ -21,7 +21,26 @@ const defaults = {
 
 exports.register = (server, options, next) => {
   const pluginOptions = _.defaultsDeep(options, defaults);
-  // if a set of hosts was configured, use the hapi host name to get the env for that host:
+  // get the appropriate robot environment for an incoming HTTP request:
+  const getEnv = (request) => {
+    let envs = pluginOptions.envs;
+    // if they defined a set of 'hosts', try to find a match for the host that sent this request:
+    if (pluginOptions.hosts !== undefined) {
+      if (pluginOptions.hosts[request.info.host] !== undefined) {
+        envs = pluginOptions.hosts[request.info.host].envs;
+        // otherwise just use the '*' wildcard host:
+      } else if (pluginOptions.hosts['*'] !== undefined) {
+        envs = pluginOptions.hosts['*'].envs;
+      }
+    }
+    // if no envs list was defined or this env doesn't exist, use the '*' wildcard env:
+    if (envs === undefined || envs[pluginOptions.env] === undefined) {
+      return envs['*'];
+    }
+    // return the env we found:
+    return envs[pluginOptions.env];
+  };
+
   server.route({
     path: '/robots.txt',
     method: 'GET',
@@ -29,16 +48,9 @@ exports.register = (server, options, next) => {
       auth: false
     },
     handler: (request, reply) => {
-      if (pluginOptions.hosts !== undefined) {
-        pluginOptions.envs = pluginOptions.hosts[request.info.host].envs;
-      }
       // render the robot.txt:
       let first = true;
-      // if env not found, use wildcard env:
-      if (!pluginOptions.envs[pluginOptions.env]) {
-        pluginOptions.env = '*';
-      }
-      let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
+      let robotText = _.reduce(getEnv(request), (memo, disallowList, userAgent) => {
         memo += `${first ? '' : os.EOL}User-agent: ${userAgent}`;
         first = false;
         if (typeof disallowList === 'string') {
