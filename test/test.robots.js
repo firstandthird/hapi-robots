@@ -116,6 +116,53 @@ lab.experiment('hapi-redirect', () => {
     });
   });
 
+  lab.test('options support multiple hosts as well', (done) => {
+    const options = {
+      verbose: true,
+      env: 'staging',
+      hosts: {
+        letterman: {
+          env: 'production',
+          envs: {
+            production: {
+            },
+            staging: {
+              // nobody has access:
+              '*': ['/']
+            }
+          }
+        },
+        martha: {
+          envs: {
+            staging: {
+              // nobody has access:
+              '*': ['/'],
+              // except for Fred, Fred has access to everything:
+              Fred: []
+            }
+          }
+        }
+      }
+    };
+    server.register({
+      register: robotModule,
+      options
+    }, () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt',
+        headers: {
+          host: 'martha'
+        }
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
+        Code.expect(response.payload).to.equal(str);
+        done();
+      });
+    });
+  });
+
   lab.test('will default to disallow all', (done) => {
     server.register({
       register: robotModule,

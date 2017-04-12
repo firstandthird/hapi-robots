@@ -21,32 +21,7 @@ const defaults = {
 
 exports.register = (server, options, next) => {
   const pluginOptions = _.defaultsDeep(options, defaults);
-  // render the robot.txt:
-  let first = true;
-  // if env not found, use wildcard env:
-  if (!pluginOptions.envs[pluginOptions.env]) {
-    pluginOptions.env = '*';
-  }
-  let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
-    memo += `${first ? '' : os.EOL}User-agent: ${userAgent}`;
-    first = false;
-    if (typeof disallowList === 'string') {
-      memo += `${os.EOL}Disallow: ${disallowList}`;
-      return memo;
-    }
-    if (disallowList.length === 0) {
-      memo += `${os.EOL}Disallow:`;
-      return memo;
-    }
-    _.each(disallowList, (disallowPath) => {
-      memo += `${os.EOL}Disallow: ${disallowPath}`;
-    });
-    return memo;
-  }, '');
-  robotText += os.EOL;
-  if (pluginOptions.verbose) {
-    server.log(['hapi-robots', 'info'], robotText);
-  }
+  // if a set of hosts was configured, use the hapi host name to get the env for that host:
   server.route({
     path: '/robots.txt',
     method: 'GET',
@@ -55,7 +30,36 @@ exports.register = (server, options, next) => {
     },
     handler: (request, reply) => {
       if (pluginOptions.verbose) {
-        server.log(['hapi-robots', 'info'], `robots.txt queried by ${request.headers['user-agent']}`);
+        server.log(['hapi-robots', 'info'], `robots.txt queried by ${request.headers['user-agent']} by host ${request.info.host}`);
+      }
+      if (pluginOptions.hosts !== undefined) {
+        pluginOptions.envs = pluginOptions.hosts[request.info.host].envs;
+      }
+      // render the robot.txt:
+      let first = true;
+      // if env not found, use wildcard env:
+      if (!pluginOptions.envs[pluginOptions.env]) {
+        pluginOptions.env = '*';
+      }
+      let robotText = _.reduce(pluginOptions.envs[options.env], (memo, disallowList, userAgent) => {
+        memo += `${first ? '' : os.EOL}User-agent: ${userAgent}`;
+        first = false;
+        if (typeof disallowList === 'string') {
+          memo += `${os.EOL}Disallow: ${disallowList}`;
+          return memo;
+        }
+        if (disallowList.length === 0) {
+          memo += `${os.EOL}Disallow:`;
+          return memo;
+        }
+        _.each(disallowList, (disallowPath) => {
+          memo += `${os.EOL}Disallow: ${disallowPath}`;
+        });
+        return memo;
+      }, '');
+      robotText += os.EOL;
+      if (pluginOptions.verbose) {
+        server.log(['hapi-robots', 'info'], robotText);
       }
       reply(robotText).type('text/plain');
     }
