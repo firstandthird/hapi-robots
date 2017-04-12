@@ -6,7 +6,7 @@ const Hapi = require('hapi');
 const robotModule = require('../index.js');
 const fs = require('fs');
 
-lab.experiment('hapi-redirect', () => {
+lab.experiment('hapi-robots', () => {
   let server;
 
   lab.beforeEach((done) => {
@@ -39,6 +39,7 @@ lab.experiment('hapi-redirect', () => {
       });
     });
   });
+
   lab.test('allows everything if env is production mode', (done) => {
     server.register({
       register: robotModule,
@@ -122,25 +123,14 @@ lab.experiment('hapi-redirect', () => {
       env: 'staging',
       hosts: {
         letterman: {
-          env: 'production',
-          envs: {
-            production: {
-            },
-            staging: {
-              // nobody has access:
-              '*': ['/']
-            }
-          }
+          // nobody has access:
+          '*': ['/']
         },
         martha: {
-          envs: {
-            staging: {
-              // nobody has access:
-              '*': ['/'],
-              // except for Fred, Fred has access to everything:
-              Fred: []
-            }
-          }
+          // nobody has access:
+          '*': ['/'],
+          // except for Fred, Fred has access to everything:
+          Fred: []
         }
       }
     };
@@ -158,6 +148,43 @@ lab.experiment('hapi-redirect', () => {
         Code.expect(response.statusCode).to.equal(200);
         const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
         Code.expect(response.payload).to.equal(str);
+        done();
+      });
+    });
+  });
+
+  lab.test('fallback if host not specified to default env', (done) => {
+    const options = {
+      verbose: true,
+      env: 'staging',
+      hosts: {
+        letterman: {
+          // nobody has access:
+          '*': ['/']
+        },
+        martha: {
+          // nobody has access:
+          '*': ['/'],
+          // except for Fred, Fred has access to everything:
+          Fred: []
+        }
+      }
+    };
+    server.register({
+      register: robotModule,
+      options
+    }, () => {
+      server.inject({
+        method: 'get',
+        url: '/robots.txt',
+        headers: {
+          host: 'leno'
+        }
+      }, (response) => {
+        Code.expect(response.statusCode).to.equal(200);
+        const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
+        Code.expect(response.payload).to.equal(str);
+        Code.expect(response.headers['content-type']).to.include('text/plain');
         done();
       });
     });
