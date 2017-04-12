@@ -23,22 +23,18 @@ exports.register = (server, options, next) => {
   const pluginOptions = _.defaultsDeep(options, defaults);
   // get the appropriate robot environment for an incoming HTTP request:
   const getEnv = (request) => {
-    let envs = pluginOptions.envs;
     // if they defined a set of 'hosts', try to find a match for the host that sent this request:
     if (pluginOptions.hosts !== undefined) {
       if (pluginOptions.hosts[request.info.host] !== undefined) {
-        envs = pluginOptions.hosts[request.info.host].envs;
-        // otherwise just use the '*' wildcard host:
-      } else if (pluginOptions.hosts['*'] !== undefined) {
-        envs = pluginOptions.hosts['*'].envs;
+        return pluginOptions.hosts[request.info.host];
       }
     }
     // if no envs list was defined or this env doesn't exist, use the '*' wildcard env:
-    if (envs === undefined || envs[pluginOptions.env] === undefined) {
-      return envs['*'];
+    if (pluginOptions.envs === undefined || pluginOptions.envs[pluginOptions.env] === undefined) {
+      return pluginOptions.envs['*'];
     }
     // return the env we found:
-    return envs[pluginOptions.env];
+    return pluginOptions.envs[pluginOptions.env];
   };
 
   server.route({
