@@ -19,7 +19,7 @@ const defaults = {
   env: process.env.NODE_ENV ? process.env.NODE_ENV : '*'
 };
 
-exports.register = (server, options, next) => {
+const register = (server, options) => {
   const pluginOptions = _.defaultsDeep(options, defaults);
   // get the appropriate robot environment for an incoming HTTP request:
   const getEnv = (request) => {
@@ -43,7 +43,7 @@ exports.register = (server, options, next) => {
     config: {
       auth: false
     },
-    handler: (request, reply) => {
+    handler: (request, h) => {
       // render the robot.txt:
       let first = true;
       let robotText = _.reduce(getEnv(request), (memo, disallowList, userAgent) => {
@@ -70,12 +70,14 @@ exports.register = (server, options, next) => {
           host: request.info.host,
           robots: robotText });
       }
-      reply(robotText).type('text/plain');
+      return h.response(robotText).type('text/plain');
     }
   });
-  next();
 };
 
-exports.register.attributes = {
+exports.plugin = {
+  name: 'hapi-robots',
+  register,
+  once: true,
   pkg: require('./package.json')
 };

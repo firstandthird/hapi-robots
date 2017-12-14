@@ -9,59 +9,51 @@ const fs = require('fs');
 lab.experiment('hapi-robots', () => {
   let server;
 
-  lab.beforeEach((done) => {
+  lab.beforeEach(async() => {
     server = new Hapi.Server();
-    server.connection();
-    server.start(done);
+    await server.start();
   });
 
-  lab.afterEach((done) => {
-    server.stop(done);
+  lab.afterEach(async() => {
+    await server.stop();
   });
 
-  lab.test('disallows everything if env is not recognized', (done) => {
-    server.register({
-      register: robotModule,
+  lab.test('disallows everything if env is not recognized', async() => {
+    await server.register({
+      plugin: robotModule,
       options: {
         env: 'totally random'
       }
-    },
-    () => {
-      server.inject({
-        method: 'get',
-        url: '/robots.txt'
-      }, (response) => {
-        Code.expect(response.statusCode).to.equal(200);
-        const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
-        Code.expect(response.payload).to.equal(str);
-        Code.expect(response.headers['content-type']).to.include('text/plain');
-        done();
-      });
     });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
+    Code.expect(response.payload).to.equal(str);
+    Code.expect(response.headers['content-type']).to.include('text/plain');
   });
 
-  lab.test('allows everything if env is production mode', (done) => {
-    server.register({
-      register: robotModule,
+  lab.test('allows everything if env is production mode', async() => {
+    await server.register({
+      plugin: robotModule,
       options: {
         env: 'production'
       }
-    },
-    () => {
-      server.inject({
-        method: 'get',
-        url: '/robots.txt'
-      }, (response) => {
-        Code.expect(response.statusCode).to.equal(200);
-        const str = fs.readFileSync('./test/expectedOutputs/allowAll.txt').toString();
-        Code.expect(response.payload).to.equal(str);
-        done();
-      });
     });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    const str = fs.readFileSync('./test/expectedOutputs/allowAll.txt').toString();
+    Code.expect(response.payload).to.equal(str);
   });
-  lab.test('allows options for different environments', (done) => {
-    server.register({
-      register: robotModule,
+
+  lab.test('allows options for different environments', async() => {
+    await server.register({
+      plugin: robotModule,
       options: {
         verbose: true,
         envs: {
@@ -73,22 +65,19 @@ lab.experiment('hapi-robots', () => {
         },
         env: 'staging'
       }
-    },
-    () => {
-      server.inject({
-        method: 'get',
-        url: '/robots.txt'
-      }, (response) => {
-        Code.expect(response.statusCode).to.equal(200);
-        const str = fs.readFileSync('./test/expectedOutputs/production.txt').toString();
-        Code.expect(response.payload).to.equal(str);
-        done();
-      });
     });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    const str = fs.readFileSync('./test/expectedOutputs/production.txt').toString();
+    Code.expect(response.payload).to.equal(str);
   });
-  lab.test('will allow all for a specific robot, if specified', (done) => {
-    server.register({
-      register: robotModule,
+
+  lab.test('will allow all for a specific robot, if specified', async() => {
+    await server.register({
+      plugin: robotModule,
       options: {
         verbose: true,
         envs: {
@@ -103,21 +92,17 @@ lab.experiment('hapi-robots', () => {
         },
         env: 'staging'
       }
-    },
-    () => {
-      server.inject({
-        method: 'get',
-        url: '/robots.txt'
-      }, (response) => {
-        Code.expect(response.statusCode).to.equal(200);
-        const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
-        Code.expect(response.payload).to.equal(str);
-        done();
-      });
     });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
+    Code.expect(response.payload).to.equal(str);
   });
 
-  lab.test('options support multiple hosts as well', (done) => {
+  lab.test('options support multiple hosts as well', async() => {
     const options = {
       verbose: true,
       env: 'staging',
@@ -134,26 +119,23 @@ lab.experiment('hapi-robots', () => {
         }
       }
     };
-    server.register({
-      register: robotModule,
+    await server.register({
+      plugin: robotModule,
       options
-    }, () => {
-      server.inject({
-        method: 'get',
-        url: '/robots.txt',
-        headers: {
-          host: 'martha'
-        }
-      }, (response) => {
-        Code.expect(response.statusCode).to.equal(200);
-        const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
-        Code.expect(response.payload).to.equal(str);
-        done();
-      });
     });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt',
+      headers: {
+        host: 'martha'
+      }
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    const str = fs.readFileSync('./test/expectedOutputs/fred.txt').toString();
+    Code.expect(response.payload).to.equal(str);
   });
 
-  lab.test('fallback if host not specified to default env', (done) => {
+  lab.test('fallback if host not specified to default env', async() => {
     const options = {
       verbose: true,
       env: 'staging',
@@ -170,29 +152,26 @@ lab.experiment('hapi-robots', () => {
         }
       }
     };
-    server.register({
-      register: robotModule,
+    await server.register({
+      plugin: robotModule,
       options
-    }, () => {
-      server.inject({
-        method: 'get',
-        url: '/robots.txt',
-        headers: {
-          host: 'leno'
-        }
-      }, (response) => {
-        Code.expect(response.statusCode).to.equal(200);
-        const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
-        Code.expect(response.payload).to.equal(str);
-        Code.expect(response.headers['content-type']).to.include('text/plain');
-        done();
-      });
     });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt',
+      headers: {
+        host: 'leno'
+      }
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
+    Code.expect(response.payload).to.equal(str);
+    Code.expect(response.headers['content-type']).to.include('text/plain');
   });
 
-  lab.test('will default to disallow all', (done) => {
-    server.register({
-      register: robotModule,
+  lab.test('will default to disallow all', async() => {
+    await server.register({
+      plugin: robotModule,
       options: {
         verbose: true,
         envs: {
@@ -201,18 +180,14 @@ lab.experiment('hapi-robots', () => {
           }
         }
       }
-    },
-    () => {
-      server.inject({
-        method: 'get',
-        url: '/robots.txt'
-      }, (response) => {
-        Code.expect(response.statusCode).to.equal(200);
-        const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
-        Code.expect(response.payload).to.equal(str);
-        Code.expect(response.headers['content-type']).to.include('text/plain');
-        done();
-      });
     });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    const str = fs.readFileSync('./test/expectedOutputs/disallowAll.txt').toString();
+    Code.expect(response.payload).to.equal(str);
+    Code.expect(response.headers['content-type']).to.include('text/plain');
   });
 });
