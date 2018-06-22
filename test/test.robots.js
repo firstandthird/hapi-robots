@@ -190,4 +190,53 @@ lab.experiment('hapi-robots', () => {
     Code.expect(response.payload).to.equal(str);
     Code.expect(response.headers['content-type']).to.include('text/plain');
   });
+
+  lab.test('supports sitemap as abolute path string', async() => {
+    await server.register({
+      plugin: robotModule,
+      options: {
+        verbose: true,
+        sitemap: 'http://somewhere.com/sitemap.xml'
+      }
+    });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    Code.expect(response.payload.includes('Sitemap: http://somewhere.com/sitemap.xml')).to.equal(true);
+  });
+
+  lab.test('supports sitemap as relative path string', async() => {
+    await server.register({
+      plugin: robotModule,
+      options: {
+        verbose: true,
+        sitemap: '/sitemap.xml'
+      }
+    });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    Code.expect(response.payload.includes(`Sitemap: ${server.info.uri}/sitemap.xml`)).to.equal(true);
+  });
+
+  lab.test('supports sitemap as array of strings', async() => {
+    await server.register({
+      plugin: robotModule,
+      options: {
+        verbose: true,
+        sitemap: ['http://somewhere.com/sitemap.xml', 'https://somewhere.com/sitemap-categories.xml']
+      }
+    });
+    const response = await server.inject({
+      method: 'get',
+      url: '/robots.txt'
+    });
+    Code.expect(response.statusCode).to.equal(200);
+    Code.expect(response.payload.includes('Sitemap: http://somewhere.com/sitemap.xml')).to.equal(true);
+    Code.expect(response.payload.includes('Sitemap: https://somewhere.com/sitemap-categories.xml')).to.equal(true);
+  });
 });
