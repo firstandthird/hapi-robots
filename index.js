@@ -63,6 +63,14 @@ const register = (server, options) => {
         return memo;
       }, '');
       robotText += os.EOL;
+      // sitemap should be at bottom
+      if (options.sitemap) {
+        options.sitemap = Array.isArray(options.sitemap) ? options.sitemap : [options.sitemap];
+        robotText += os.EOL;
+        options.sitemap.forEach(sitemap => {
+          robotText += `Sitemap: ${sitemap}${os.EOL}`;
+        });
+      }
       if (pluginOptions.verbose) {
         server.log(['hapi-robots', 'info'], {
           message: 'robots.txt queried',
