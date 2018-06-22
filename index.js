@@ -68,6 +68,9 @@ const register = (server, options) => {
         options.sitemap = Array.isArray(options.sitemap) ? options.sitemap : [options.sitemap];
         robotText += os.EOL;
         options.sitemap.forEach(sitemap => {
+          if (!sitemap.startsWith('http://') && !sitemap.startsWith('https://')) {
+            sitemap = `${server.info.uri}${sitemap}`;
+          }
           robotText += `Sitemap: ${sitemap}${os.EOL}`;
         });
       }
