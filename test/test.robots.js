@@ -215,12 +215,24 @@ lab.experiment('hapi-robots', () => {
         sitemap: '/sitemap.xml'
       }
     });
+    let hostname = '';
+    server.route({
+      path: '/gethost',
+      method: 'GET',
+      handler: (request, h) => {
+        hostname = request.info.host;
+      }
+    });
+    await server.inject({
+      method: 'get',
+      url: '/gethost'
+    });
     const response = await server.inject({
       method: 'get',
       url: '/robots.txt'
     });
     Code.expect(response.statusCode).to.equal(200);
-    Code.expect(response.payload.includes(`Sitemap: ${server.info.uri}/sitemap.xml`)).to.equal(true);
+    Code.expect(response.payload.includes(`Sitemap: ${hostname}/sitemap.xml`)).to.equal(true);
   });
 
   lab.test('supports sitemap as array of strings', async() => {
@@ -268,6 +280,19 @@ lab.experiment('hapi-robots', () => {
       }
     });
     server.info.protocol = 'https';
+    // set up a route to get the request hostname
+    let hostname = '';
+    server.route({
+      path: '/gethost',
+      method: 'GET',
+      handler: (request, h) => {
+        hostname = request.info.host;
+      }
+    });
+    await server.inject({
+      method: 'get',
+      url: '/gethost'
+    });
     const response = await server.inject({
       method: 'get',
       url: '/robots.txt'
@@ -275,6 +300,6 @@ lab.experiment('hapi-robots', () => {
     Code.expect(response.statusCode).to.equal(200);
     Code.expect(response.payload.includes('Sitemap: https://somewhere.com/sitemap.xml')).to.equal(true);
     Code.expect(response.payload.includes('Sitemap: https://somewhere.com/sitemap-categories.xml')).to.equal(true);
-    Code.expect(response.payload.includes(`Sitemap: ${server.info.uri.replace('http', 'https')}/sitemap.xml`)).to.equal(true);
+    Code.expect(response.payload.includes(`Sitemap: ${hostname.replace('http', 'https')}/sitemap.xml`)).to.equal(true);
   });
 });
