@@ -44,6 +44,7 @@ const register = (server, options) => {
       auth: false
     },
     handler: (request, h) => {
+      const protocol = pluginOptions.forceHttps ? 'https' : request.server.info.protocol;
       // render the robot.txt:
       let first = true;
       let robotText = _.reduce(getEnv(request), (memo, disallowList, userAgent) => {
@@ -69,7 +70,10 @@ const register = (server, options) => {
         robotText += os.EOL;
         options.sitemap.forEach(sitemap => {
           if (!sitemap.startsWith('http://') && !sitemap.startsWith('https://')) {
-            sitemap = `${server.info.uri}${sitemap}`;
+            sitemap = `${request.server.info.uri}${sitemap}`;
+          }
+          if (pluginOptions.forceHttps || protocol === 'https') {
+            sitemap = sitemap.replace('http://', 'https://');
           }
           robotText += `Sitemap: ${sitemap}${os.EOL}`;
         });
