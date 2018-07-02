@@ -70,7 +70,7 @@ const register = (server, options) => {
         robotText += os.EOL;
         options.sitemap.forEach(sitemap => {
           if (!sitemap.startsWith('http://') && !sitemap.startsWith('https://')) {
-            sitemap = `${request.info.host}${sitemap}`;
+            sitemap = `${protocol}://${request.info.host}${sitemap}`;
           }
           if (pluginOptions.forceHttps || protocol === 'https') {
             sitemap = sitemap.replace('http://', 'https://');
